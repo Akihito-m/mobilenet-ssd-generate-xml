@@ -1,0 +1,8 @@
+Placez vos images dans le dossier image (le script ne prend que des .jpg mais vous pouvez l'adapter facilement)
+
+Ouvrez une commande Windows et lancez :
+python mobilenetssd_images.py D:\workspaces\mobilenet-ssd-generate-xml
+
+==> il va prendre le modèle pré-entraîné qui est dans le répertoire
+==> charger les images
+==> sauvegarder les résultats dans /generated
