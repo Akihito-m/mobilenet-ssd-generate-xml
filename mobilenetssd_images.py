@@ -8,15 +8,17 @@ except ImportError:
     raise ImportError('Can\'t find OpenCV Python module. If you\'ve built it from sources without installation, '
                       'configure environemnt variable PYTHONPATH to "opencv_build_dir/lib" directory (with "python3" subdirectory if required)')
 
-root = sys.argv[1]
-prototxt = root+'/MobileNetSSD_deploy.prototxt'
-weights = root+'/MobileNetSSD_deploy.caffemodel'
+input_dir = sys.argv[1]
+output_dir = sys.argv[2]
+output_label = sys.argv[3]
+prototxt = 'models/MobileNetSSD_deploy.prototxt'
+weights = 'models/MobileNetSSD_deploy.caffemodel'
 
 # Functions
-def initialize_box_xml(image):
+def initialize_box_xml(image, img_name):
     annotation = ET.Element("annotation")
-    ET.SubElement(annotation, "folder").text = image.split("/")[-2:-1][0]
-    ET.SubElement(annotation, "filename").text = image[:-4]+"_crop.jpg"
+    ET.SubElement(annotation, "folder").text = output_dir
+    ET.SubElement(annotation, "filename").text = img_name
     ET.SubElement(annotation, "path").text = image
     
     src = ET.SubElement(annotation, "source")
@@ -71,11 +73,11 @@ else:
         86: 'vase', 87: 'scissors', 88: 'teddy bear', 89: 'hair drier', 90: 'toothbrush' }
 
 
-# For each image in /image
-pathlist = Path(root+'/image').glob('**/*.jpg')
+# For each image in /input_dir
+pathlist = Path(input_dir).glob('**/*.jpeg')
 for file in pathlist:
     # because path is object not string
-    #file="D:\workspaces\mobilenet\image\43.jpg"
+    #file="D:\workspaces\mobilenet\image\43.jpeg"
     image = str(file).replace("\\","/")
     img_name = image.split("/")[-1:][0]
 
@@ -103,8 +105,8 @@ for file in pathlist:
     rows = frame.shape[0]
     
     # Save cropped image
-    cv.imwrite(root+"/generated/crop_"+img_name, frame)
-    annotation = initialize_box_xml(image)
+    cv.imwrite(output_dir+"/"+img_name, frame)
+    annotation = initialize_box_xml(image, img_name)
     
     for i in range(detections.shape[2]):
         confidence = detections[0, 0, i, 2]
@@ -131,7 +133,7 @@ for file in pathlist:
                 
                 # XML completion
                 obj = ET.SubElement(annotation, "object")
-                ET.SubElement(obj, "name").text = label
+                ET.SubElement(obj, "name").text = output_label
                 ET.SubElement(obj, "pose").text = "Unspecified"
                 ET.SubElement(obj, "truncated").text = "0"
                 ET.SubElement(obj, "difficult").text = "0"
@@ -143,8 +145,8 @@ for file in pathlist:
                 ET.SubElement(box, "ymax").text = str(yRightTop)
                 
     # Save image with labels
-    cv.imwrite(root+"/generated/labels_"+img_name, frame)
+    #cv.imwrite(input_dir+"/labels_"+img_name, frame)
     
     # Save XML
     tree = ET.ElementTree(annotation)
-    tree.write(root+"/generated/crop_"+img_name.split(".")[:-1][0]+".xml")
+    tree.write(output_dir+"/"+img_name.split(".")[:-1][0]+".xml")
